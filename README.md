@@ -1,4 +1,5 @@
 # My First Git Repo
 This is a new feature
 Author: Kun
-## Version 1.0 - Stable Release
+## Version 2.0 - New Feature Release
+
