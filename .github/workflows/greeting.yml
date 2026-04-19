@@ -1,0 +1,25 @@
+name: Greeting Workflow
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Say Hello
+        run: echo "Hello, kun! Welcome to GitHub Actions!"
+      
+      - name: Show Date
+        run: date
+      
+      - name: Show Repository Info
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "Actor: ${{ github.actor }}"
+
