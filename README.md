@@ -1,4 +1,4 @@
-## 📋 Table of Contents
+hi## 📋 Table of Contents
 
 1. [Chapter 1 - Sourcing ROS](#chapter-1-sourcing-ros)
 2. [Chapter 2 - ROS Executables from Packages](#chapter-2-ros-executables-from-packages)
@@ -486,13 +486,7 @@ After completing this guide, you will understand:
 
 ---
 
-**Author:** Fu (AI Assistant)  
-**Last Updated:** 2026-04-24  
-**Version:** 1.0 (Part 1 of 3)
 
----
-
-**Keep going kun! 頑張ってください！** ✨🚀🐢
 
 ---
 
@@ -1266,3 +1260,623 @@ rviz2
 | Map | Show 2D map |
 
 ---
+---
+
+## Chapter 17 - Gazebo Robot Simulation
+
+### 🌍 What is Gazebo?
+
+**Gazebo** is a 3D robot simulation environment with physics engine.
+
+### 📦 Install Gazebo ROS2 Packages
+
+```bash
+sudo apt install ros-humble-gazebo-ros-pkg
+```
+
+### 📝 Gazebo World Example
+
+**File:** `worlds/my_world.world`
+
+```xml
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="my_world">
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    
+    <!-- Robot model -->
+    <include>
+      <uri>model://my_robot</uri>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+  </world>
+</sdf>
+```
+
+### 🚀 Starting Gazebo
+
+```bash
+# Start Gazebo
+gz sim my_world.world
+
+# With ROS2
+ros2 launch gazebo_ros gazebo.launch.py world:=my_world.world
+```
+
+### 📝 Gazebo Plugin Example
+
+**In URDF/Xacro:**
+
+```xml
+<gazebo>
+  <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
+    <left_joint>left_wheel_joint</left_joint>
+    <right_joint>right_wheel_joint</right_joint>
+    <wheel_separation>0.4</wheel_separation>
+    <wheel_diameter>0.2</wheel_diameter>
+    <max_wheel_torque>10</max_wheel_torque>
+    <publish_odom>true</publish_odom>
+    <publish_odom_tf>true</publish_odom_tf>
+    <odometry_frame>odom</odometry_frame>
+    <robot_base_frame>base_link</robot_base_frame>
+  </plugin>
+</gazebo>
+```
+
+### 🎯 Gazebo vs RViz
+
+| Feature | RViz | Gazebo |
+|---------|------|--------|
+| Visualization | ✅ | ✅ |
+| Physics Simulation | ❌ | ✅ |
+| Sensor Simulation | ❌ | ✅ |
+| Real-time Control | ❌ | ✅ |
+| Collision Detection | ❌ | ✅ |
+
+---
+
+## Chapter 18 - PlotJuggler Data Visualization
+
+### 📊 What is PlotJuggler?
+
+**PlotJuggler** is a tool for real-time plotting of ROS topic data.
+
+### 📦 Installation
+
+```bash
+sudo apt install ros-humble-plotjuggler-ros
+```
+
+### 🚀 Starting PlotJuggler
+
+```bash
+# 1. Start turtlesim
+ros2 run turtlesim turtlesim_node
+
+# 2. Start PlotJuggler
+plotjuggler
+```
+
+### 📈 Plotting Data
+
+**Steps:**
+
+1. Click **Streaming** tab in PlotJuggler
+2. Select **ROS2**
+3. Choose topics (e.g., `/turtle1/pose`)
+4. Click **Start**
+5. View real-time plot
+
+### 🎯 PlotJuggler Benefits
+
+- ✅ Real-time data visualization
+- ✅ View multiple topics simultaneously
+- ✅ Record and playback data
+- ✅ Support CSV, ULog, MCLog formats
+
+---
+
+## Chapter 19 - Camera Gazebo and RViz Simulation
+
+### 📷 Adding Camera Sensor
+
+**In URDF/Xacro:**
+
+```xml
+<gazebo reference="camera_link">
+  <sensor type="camera" name="camera1">
+    <update_rate>30.0</update_rate>
+    <camera name="head">
+      <horizontal_fov>1.3962634</horizontal_fov>
+      <image>
+        <width>800</width>
+        <height>800</height>
+        <format>R8G8B8</format>
+      </image>
+      <clip>
+        <near>0.02</near>
+        <far>300</far>
+      </clip>
+      <noise>
+        <type>gaussian</type>
+        <mean>0.0</mean>
+        <stddev>0.007</stddev>
+      </noise>
+    </camera>
+    <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+      <always_on>true</always_on>
+      <update_rate>0.0</update_rate>
+      <camera_name>camera1</camera_name>
+      <image_topic_name>camera/image_raw</image_topic_name>
+      <camera_info_topic_name>camera/camera_info</camera_info_topic_name>
+      <frame_name>camera_link</frame_name>
+    </plugin>
+  </sensor>
+</gazebo>
+```
+
+### 🚀 Running Camera Simulation
+
+```bash
+# 1. Start robot in Gazebo
+ros2 launch my_robot gazebo.launch.py
+
+# 2. Check image topic
+ros2 topic list | grep camera
+
+# 3. Display in RViz
+rviz2
+# Add → Image → Topic: /camera/image_raw
+```
+
+### 📊 Camera Topics
+
+| Topic | Message Type | Description |
+|-------|-------------|-------------|
+| `/camera/image_raw` | sensor_msgs/msg/Image | Raw image |
+| `/camera/camera_info` | sensor_msgs/msg/CameraInfo | Camera calibration |
+| `/camera/compressed` | sensor_msgs/msg/CompressedImage | Compressed image |
+
+---
+
+## Chapter 20 - LiDAR Gazebo and RViz Simulation
+
+### 📡 Adding LiDAR Sensor
+
+**In URDF/Xacro:**
+
+```xml
+<gazebo reference="laser_link">
+  <sensor type="ray" name="laser">
+    <pose>0 0 0 0 0 0</pose>
+    <visualize>true</visualize>
+    <update_rate>40</update_rate>
+    <ray>
+      <scan>
+        <horizontal>
+          <samples>720</samples>
+          <resolution>1</resolution>
+          <min_angle>-3.14159</min_angle>
+          <max_angle>3.14159</max_angle>
+        </horizontal>
+      </scan>
+      <range>
+        <min>0.10</min>
+        <max>30.0</max>
+        <resolution>0.01</resolution>
+      </range>
+      <noise>
+        <type>gaussian</type>
+        <mean>0.0</mean>
+        <stddev>0.01</stddev>
+      </noise>
+    </ray>
+    <plugin name="laser_controller" filename="libgazebo_ros_ray_sensor.so">
+      <ros>
+        <argument>~/out:=scan</argument>
+      </ros>
+      <output_type>sensor_msgs/LaserScan</output_type>
+      <frame_name>laser_link</frame_name>
+    </plugin>
+  </sensor>
+</gazebo>
+```
+
+### 🚀 Running LiDAR Simulation
+
+```bash
+# 1. Start robot in Gazebo
+ros2 launch my_robot gazebo.launch.py
+
+# 2. Check laser scan topic
+ros2 topic echo /scan
+
+# 3. Display in RViz
+rviz2
+# Add → LaserScan → Topic: /scan
+```
+
+### 📊 LiDAR Topics
+
+| Topic | Message Type | Description |
+|-------|-------------|-------------|
+| `/scan` | sensor_msgs/msg/LaserScan | 2D laser scan |
+| `/scan_raw` | sensor_msgs/msg/LaserScan | Raw laser scan |
+
+---
+
+## Chapter 21 - Depth Camera Gazebo and RViz Simulation
+
+### 📷 Adding Depth Camera
+
+**In URDF/Xacro:**
+
+```xml
+<gazebo reference="depth_camera_link">
+  <sensor type="depth" name="depth_camera">
+    <always_on>true</always_on>
+    <update_rate>30.0</update_rate>
+    <camera name="depth">
+      <horizontal_fov>1.047198</horizontal_fov>
+      <image>
+        <width>640</width>
+        <height>480</height>
+        <format>R8G8B8</format>
+      </image>
+      <clip>
+        <near>0.05</near>
+        <far>8</far>
+      </clip>
+    </camera>
+    <plugin name="depth_camera_controller" filename="libgazebo_ros_camera.so">
+      <always_on>true</always_on>
+      <update_rate>0.0</update_rate>
+      <camera_name>depth_camera</camera_name>
+      <image_topic_name>depth/image_raw</image_topic_name>
+      <camera_info_topic_name>depth/camera_info</camera_info_topic_name>
+      <depth_image_topic_name>depth/image_raw</depth_image_topic_name>
+      <point_cloud_topic_name>depth/points</point_cloud_topic_name>
+      <frame_name>depth_camera_link</frame_name>
+    </plugin>
+  </sensor>
+</gazebo>
+```
+
+### 🚀 Running Depth Camera
+
+```bash
+# 1. Start robot in Gazebo
+ros2 launch my_robot gazebo.launch.py
+
+# 2. Check topics
+ros2 topic list | grep depth
+
+# Result:
+# /depth/image_raw
+# /depth/camera_info
+# /depth/points
+
+# 3. Display PointCloud2 in RViz
+rviz2
+# Add → PointCloud2 → Topic: /depth/points
+```
+
+### 📊 Depth Camera Topics
+
+| Topic | Message Type | Description |
+|-------|-------------|-------------|
+| `/depth/image_raw` | sensor_msgs/msg/Image | Depth image |
+| `/depth/camera_info` | sensor_msgs/msg/CameraInfo | Camera calibration |
+| `/depth/points` | sensor_msgs/msg/PointCloud2 | 3D point cloud |
+
+---
+
+## Chapter 22 - Mobile Robot ROS2 Control
+
+### 🤖 What is ROS2 Control?
+
+**ROS2 Control** is a hardware abstraction layer for robot control (motors, sensors).
+
+### 📦 Installation
+
+```bash
+sudo apt install ros-humble-ros2-control
+sudo apt install ros-humble-ros2-controllers
+sudo apt install ros-humble-gazebo-ros2-control
+```
+
+### 📝 ROS2 Control in URDF
+
+```xml
+<ros2_control name="GazeboSystem" type="system">
+  <hardware>
+    <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+  </hardware>
+  
+  <joint name="left_wheel_joint">
+    <command_interface name="velocity">
+      <param name="min">-10</param>
+      <param name="max">10</param>
+    </command_interface>
+    <state_interface name="velocity"/>
+    <state_interface name="position"/>
+  </joint>
+  
+  <joint name="right_wheel_joint">
+    <command_interface name="velocity">
+      <param name="min">-10</param>
+      <param name="max">10</param>
+    </command_interface>
+    <state_interface name="velocity"/>
+    <state_interface name="position"/>
+  </joint>
+</ros2_control>
+
+<gazebo>
+  <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+    <parameters>$(find my_robot)/config/ros2_control.yaml</parameters>
+  </plugin>
+</gazebo>
+```
+
+### 📝 ROS2 Control Config (YAML)
+
+**File:** `config/ros2_control.yaml`
+
+```yaml
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+    
+    diff_cont:
+      type: diff_drive_controller/DiffDriveController
+    
+    joint_broad:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+diff_cont:
+  ros__parameters:
+    publish_rate: 50.0
+    base_frame_id: base_link
+    left_wheel_names: ['left_wheel_joint']
+    right_wheel_names: ['right_wheel_joint']
+    wheel_separation: 0.4
+    wheel_radius: 0.1
+    use_stamped_vel: false
+
+joint_broad:
+  ros__parameters:
+    joints: ['left_wheel_joint', 'right_wheel_joint']
+```
+
+### 🚀 Running Mobile Robot
+
+```bash
+# 1. Start robot in Gazebo
+ros2 launch my_robot gazebo.launch.py
+
+# 2. Load controllers
+ros2 control load_controller diff_cont
+ros2 control load_controller joint_broad
+
+# 3. Start controllers
+ros2 control start_controller diff_cont
+ros2 control start_controller joint_broad
+
+# 4. Send velocity command
+ros2 topic pub /diff_cont/cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.5}, angular: {z: 0.0}}"
+```
+
+---
+
+## Chapter 23 - SLAM Toolbox
+
+### 🗺️ What is SLAM?
+
+**SLAM (Simultaneous Localization and Mapping)** allows robots to build maps and locate themselves in unknown environments.
+
+### 📦 Installation
+
+```bash
+sudo apt install ros-humble-slam-toolbox
+```
+
+### 🚀 Starting SLAM
+
+```bash
+# 1. Start robot in Gazebo
+ros2 launch my_robot gazebo.launch.py
+
+# 2. Start SLAM Toolbox (async mode)
+ros2 launch slam_toolbox online_async_launch.py
+
+# 3. Open RViz
+rviz2
+```
+
+### 📝 SLAM Config (YAML)
+
+**File:** `config/slam.yaml`
+
+```yaml
+slam_toolbox:
+  ros__parameters:
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    
+    odom_frame: odom
+    map_frame: map
+    base_frame: base_link
+    scan_topic: /scan
+    mode: mapping
+    
+    minimum_travel_distance: 0.5
+    minimum_travel_heading: 0.5
+    scan_buffer_size: 10
+    
+    map_update_interval: 5.0
+    resolution: 0.05
+    max_laser_range: 20.0
+```
+
+### 🗺️ Saving a Map
+
+```bash
+# Save map
+ros2 run nav2_map_server map_saver_cli -f my_map
+```
+
+### 📊 SLAM Topics
+
+| Topic | Message Type |
+|-------|-------------|
+| `/scan` | sensor_msgs/msg/LaserScan |
+| `/map` | nav_msgs/msg/OccupancyGrid |
+| `/map_metadata` | nav_msgs/msg/MapMetaData |
+| `/slam_toolbox/feedback` | slam_toolbox/msg/Feedback |
+
+---
+
+## Chapter 24 - Navigation with Nav2
+
+### 🧭 What is Nav2?
+
+**Nav2 (Navigation 2)** is the autonomous navigation stack for ROS2.
+
+### 📦 Installation
+
+```bash
+sudo apt install ros-humble-navigation2
+sudo apt install ros-humble-nav2-bringup
+```
+
+### 🚀 Starting Nav2
+
+```bash
+# 1. Start robot in Gazebo
+ros2 launch my_robot gazebo.launch.py
+
+# 2. Start SLAM (if no map yet)
+ros2 launch slam_toolbox online_async_launch.py
+
+# 3. Start Nav2 (if map exists)
+ros2 launch nav2_bringup navigation_launch.py use_sim_time:=True
+
+# 4. Open RViz
+ros2 launch nav2_bringup rviz_launch.py
+```
+
+### 📝 Nav2 Config (YAML)
+
+**File:** `config/nav2.yaml`
+
+```yaml
+controller_server:
+  ros__parameters:
+    controller_frequency: 20.0
+    
+    controller_plugins: ["FollowPath"]
+    FollowPath:
+      plugin: "dwb_core::DWBLocalPlanner"
+      
+      critic_plugins: ["RotateToGoal", "Oscillation", "BaseObstacle"]
+      RotateToGoal:
+        plugin: "dwb_critics::RotateToGoalCritic"
+      Oscillation:
+        plugin: "dwb_critics::OscillationCritic"
+      BaseObstacle:
+        plugin: "dwb_critics::BaseObstacleCritic"
+
+planner_server:
+  ros__parameters:
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "nav2_navfn_planner/NavfnPlanner"
+      tolerance: 0.5
+      use_astar: false
+      allow_unknown: true
+
+behavior_server:
+  ros__parameters:
+    behavior_plugins: ["spin", "backup", "drive_on_heading", "wait"]
+    spin:
+      plugin: "nav2_behaviors/Spin"
+    backup:
+      plugin: "nav2_behaviors/BackUp"
+    drive_on_heading:
+      plugin: "nav2_behaviors/DriveOnHeading"
+    wait:
+      plugin: "nav2_behaviors/Wait"
+
+bt_navigator:
+  ros__parameters:
+    bt_loop_duration: 10
+    default_server_timeout: 20
+```
+
+### 🎯 Nav2 Flow
+
+```
+1. Send Goal
+   ↓
+2. Global Planner (find path)
+   ↓
+3. Local Planner (direct control)
+   ↓
+4. Behavior Trees (obstacle avoidance)
+   ↓
+5. Goal Reached
+```
+
+### 📊 Nav2 Topics
+
+| Topic | Message Type |
+|-------|-------------|
+| `/cmd_vel` | geometry_msgs/msg/Twist |
+| `/goal_pose` | geometry_msgs/msg/PoseStamped |
+| `/map` | nav_msgs/msg/OccupancyGrid |
+| `/particle_cloud` | geometry_msgs/msg/PoseArray |
+
+### 🎮 Sending a Goal
+
+```bash
+# In RViz: Click "2D Goal Pose" and select goal
+# Or use command:
+
+ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: 'map'}, pose: {position: {x: 5.0, y: 5.0, z: 0.0}, orientation: {w: 1.0}}}}"
+```
+
+---
+
+## 📚 Complete Summary
+
+After completing this guide, you will understand:
+
+- ✅ How to source ROS2 environment
+- ✅ How packages and executables work
+- ✅ How nodes communicate via topics
+- ✅ How to use services for request/response
+- ✅ How to configure nodes with parameters
+- ✅ How to use actions for long tasks
+- ✅ How to set up and manage workspaces
+- ✅ How to build packages with Colcon
+- ✅ How to create Python and C++ packages
+- ✅ How to create Publisher/Subscriber in Python and C++
+- ✅ How to use Launch Files
+- ✅ How to create URDF and Xacro robot models
+- ✅ How to visualize with RViz
+- ✅ How to simulate with Gazebo
+- ✅ How to use PlotJuggler for data visualization
+- ✅ How to add Camera, LiDAR, and Depth Camera sensors
+- ✅ How to use ROS2 Control for mobile robots
+- ✅ How to use SLAM Toolbox for mapping
+- ✅ How to use Nav2 for autonomous navigation
+
+
