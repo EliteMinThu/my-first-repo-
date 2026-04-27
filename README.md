@@ -11,6 +11,12 @@ hi## 📋 Table of Contents
 
 ---
 
+ArduPilot (SITL)
+      ⇅ MAVLink (UDP)
+MAVROS (ROS bridge)
+      ⇅ ROS2 Topics
+Your ROS Node (C++)
+
 ## Chapter 1 - Sourcing ROS
 
 ### 📌 What is Sourcing?
